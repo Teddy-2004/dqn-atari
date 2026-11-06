@@ -1,0 +1,24 @@
+{
+  "hyperparameters": {
+    "member": "Teddy",
+    "exp": 3,
+    "env": "ALE/Boxing-v5",
+    "lr": 2.5e-05,
+    "gamma": 0.99,
+    "batch_size": 32,
+    "eps_start": 1.0,
+    "eps_end": 0.01,
+    "eps_decay": 100000,
+    "total_steps": 500000,
+    "buffer_size": 50000,
+    "learning_starts": 10000,
+    "train_freq": 4,
+    "target_update": 1000,
+    "seed": 42
+  },
+  "episodes": 280,
+  "mean_reward_last_20": -3.2,
+  "best_episode_reward": 27.0,
+  "mean_episode_length_last_20": 1781.9,
+  "training_minutes": 37.0
+}
