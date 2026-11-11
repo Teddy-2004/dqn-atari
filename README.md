@@ -76,7 +76,7 @@ common.py                  environment setup + Q-network (shared by train.py and
 train.py                   training loop: replay buffer, ε-greedy, Bellman update, target network
 play.py                    loads dqn_model.pth and plays greedily in a game window
 compare_experiments.py     draws all of one member's experiments on a single chart
-dqn_model.pth              best trained model (copy of models/Teddy/exp6/dqn_model.pth)
+dqn_model.pth              best trained model (copy of models/Hasbiyallah/exp10/dqn_model.pth)
 models/<member>/exp<N>/    one folder per experiment: dqn_model.pth, training_log.csv,
                            training_plot.png, summary.json
 <Member>_Hyperparameter_experiment_results.md   each member's experiment table
@@ -91,8 +91,8 @@ This project uses **uv** as its only package and environment manager.
 uv sync    # create the environment and install all dependencies
 
 # Train one experiment (this is the best configuration)
-uv run train.py --member Teddy --exp 6 --lr 1e-4 --gamma 0.99 --batch_size 64 \
-    --eps_start 1.0 --eps_end 0.01 --eps_decay 100000 --total_steps 500000
+uv run train.py --member Hasbiyallah --exp 10 --seed 2 --lr 1e-4 --gamma 0.98 --batch_size 64 \
+    --eps_start 1.0 --eps_end 0.01 --eps_decay 200000 --total_steps 500000
 
 # Watch the best model play (press Q to close the window)
 uv run play.py --model dqn_model.pth --episodes 3
@@ -111,35 +111,46 @@ Each member ran 10 experiments around a shared baseline, with each member explor
 - [Parfait_Hyperparameter_experiment_results.md](Parfait_Hyperparameter_experiment_results.md): learning rate and batch size, and how they interact
 - [Hasbiyallah_Hyperparameter_experiment_results.md](Hasbiyallah_Hyperparameter_experiment_results.md): gamma and exploration schedule
 
-The best run so far is **Tedla's experiment 6**:
+Our final model is **Hasbiyallah's experiment 10**:
 
 | Hyperparameter | Value |
 | --- | --- |
 | Learning rate | 1e-4 |
-| Gamma (γ) | 0.99 |
+| Gamma (γ) | 0.98 |
 | Batch size | 64 |
 | ε start → end | 1.0 → 0.01 |
-| ε decay | 100,000 steps |
-| Fixed settings | buffer 50,000 · target update every 1,000 steps · train every 4 steps · 10,000 warm-up steps |
+| ε decay | 200,000 steps |
+| Fixed settings | buffer 50,000 · target update every 1,000 steps · train every 4 steps · 10,000 warm-up steps · seed 2 |
+
+### How we chose it
+
+The training score (mean of the last 20 episodes) is a noisy measure: it includes 1% random moves and depends on where each run happened to be on its last swing. So we tested the four strongest models **greedily (no random moves, exactly as `play.py` plays) over the same 10 rounds**:
+
+| Model | Training score (last 20) | Greedy test: mean of 10 rounds | Worst round | Knock-out wins |
+| --- | --- | --- | --- | --- |
+| **Hasbiyallah exp 10** (γ 0.98, ε decay 200k) | +49.45 | **+63.6** | +40 | **10/10** |
+| Parfait exp 1 (baseline, seed 1) | +42.1 | +50.5 | +34 | 10/10 |
+| Tedla exp 6 (baseline, seed 42) | +60.25 | +45.7 | +3 | 8/10 |
+| Hasbiyallah exp 3 (γ 0.98) | +62.15 | +39.1 | −2 | 7/10 |
+
+Hasbiyallah's exp 10 won every test round by knock-out and was never close to losing, so it is the model in `dqn_model.pth`. The two runs with the highest training scores (Tedla exp 6, Hasbiyallah exp 3) were the least consistent in the test, which shows why a separate evaluation matters.
 
 ### Training performance of the best experiment
 
 | Metric | Value |
 | --- | --- |
 | Number of steps | 500,000 |
-| Episodes played | 316 |
-| Mean reward, last 20 episodes | **+60.25** |
-| Best single episode reward | +76 |
-| Mean episode length, last 20 episodes | **1,107.5 steps** (a full round is about 1,780) |
-| Training time | 23.9 minutes (GPU) |
+| Episodes played | 309 |
+| Mean reward, last 20 episodes | **+49.45** |
+| Best single episode reward | +82 |
+| Mean episode length, last 20 episodes | **1,204 steps** (a full round is about 1,780) |
+| Training time | 24.4 minutes (GPU) |
 
-The shorter episodes are a sign of strength: a round only ends before about 1,780 steps when someone wins by knock-out, so by the end of training our agent was knocking the opponent out in most rounds.
+The shorter episodes are a sign of strength: a round only ends before about 1,780 steps when someone wins by knock-out.
 
-Tested greedily (no random moves, exactly as `play.py` plays) over 5 rounds, the model scored **+44, +74, +75, +43 and +57 (mean +58.6)** and won every round by knock-out.
+![Training plot of the best experiment](models/Hasbiyallah/exp10/training_plot.png)
 
-![Training plot of the best experiment](models/Teddy/exp6/training_plot.png)
-
-The top panel shows the reward per episode with a 20-episode moving average; the bottom panel shows episode length. The short dip after about 100,000 steps is expected: that is when ε reaches its minimum, so the agent stops playing randomly and relies on its still-improving network.
+The top panel shows the reward per episode with a 20-episode moving average; the bottom panel shows episode length. The score stays near 0 for the first 200,000 steps, because ε is still high and the agent plays mostly at random. Once ε reaches its minimum, the agent relies on its network and the score climbs steadily to about +50.
 
 ### Comparison of all experiments
 
@@ -147,10 +158,12 @@ The top panel shows the reward per episode with a 20-episode moving average; the
 
 ![Parfait's 10 experiments compared](models/Parfait/comparison_plot.png)
 
-**Limitation:** each configuration was trained once, and DQN results vary between runs with different random seeds. Large differences between runs are meaningful; small ones may be chance.
+![Hasbiyallah's 10 experiments compared](models/Hasbiyallah/comparison_plot.png)
+
+**Limitation:** each configuration was trained once, and DQN results vary a lot between runs. The same baseline settings scored +60.25, +42.1 and +37.8 with three different seeds, and Hasbiyallah's re-runs with identical settings and seed also differed (GPU training is not fully deterministic). Large, repeated patterns are meaningful; gaps of 10–20 points may be chance.
 
 ## Gameplay demonstration
 
 [![Watch the trained agent play Boxing](https://img.youtube.com/vi/UEQ8XjAVLz0/0.jpg)](https://www.youtube.com/watch?v=UEQ8XjAVLz0)
 
-In this recording, the best model (`dqn_model.pth`) plays one full round greedily using `play.py`. It wins by **knock-out with a score of +67 after only 993 steps**, about half the length of a full round.
+This recording was made with Tedla's exp 6 model, before the final model was chosen. It plays one full round greedily using `play.py`. It wins by **knock-out with a score of +67 after only 993 steps**, about half the length of a full round.
