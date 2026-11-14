@@ -8,9 +8,9 @@ A DQN agent built from scratch with **PyTorch** and **Gymnasium** that learns to
 
 | Member | Main contribution |
 | --- | --- |
-| Tedla Tesfaye Godebo | DQN implementation (`train.py`, `play.py`, `common.py`, `compare_experiments.py`), 10 experiments (baseline sweep), live demo |
-| Parfait Uhiriwe | 10 experiments (learning rate and batch size), README, gameplay video |
-| Hasbiyallah Umutoniwabo | 10 experiments (gamma and exploration), slides, presentation booking, task allocation sheet |
+| Tedla Tesfaye Godebo | DQN implementation (`train.py`, `play.py`, `common.py`, `compare_experiments.py`), project setup with uv, 10 experiments (baseline sweep), final model selection, presentation booking, task allocation sheet, live demo |
+| Parfait Uhiriwe | 10 experiments (learning rate and batch size), README, gameplay video, presentation introduction |
+| Hasbiyallah Umutoniwabo | 10 experiments (gamma and exploration), presentation slides |
 
 The full task breakdown is in `Task allocation sheet.pdf`.
 
@@ -81,6 +81,7 @@ models/<member>/exp<N>/    one folder per experiment: dqn_model.pth, training_lo
                            training_plot.png, summary.json
 <Member>_Hyperparameter_experiment_results.md   each member's experiment table
 Task allocation sheet.pdf  who did what
+replay_3d/                 interactive 3D replay of the final model's round (made with the help of Claude AI)
 ```
 
 ## Setup and usage (uv)
@@ -164,6 +165,20 @@ The top panel shows the reward per episode with a 20-episode moving average; the
 
 ## Gameplay demonstration
 
-[![Watch the trained agent play Boxing](https://img.youtube.com/vi/UEQ8XjAVLz0/0.jpg)](https://www.youtube.com/watch?v=UEQ8XjAVLz0)
+[![Watch the trained agent play Boxing](https://img.youtube.com/vi/N3P--zuzV7Q/0.jpg)](https://youtube.com/shorts/N3P--zuzV7Q)
 
-This recording was made with Tedla's exp 6 model, before the final model was chosen. It plays one full round greedily using `play.py`. It wins by **knock-out with a score of +67 after only 993 steps**, about half the length of a full round.
+This recording shows the final model (`dqn_model.pth`, Hasbiyallah's exp 10) playing one full round greedily, with the same display as `play.py` (score, step and the action the network chose). It wins by **knock-out, 100 punches to 30, a score of +70 after 857 steps**, less than half the length of a full round (about 1,780 steps).
+
+## 3D replay (made with the help of Claude AI)
+
+[`replay_3d/boxing_replay_3d.html`](replay_3d/boxing_replay_3d.html) is an interactive 3D replay of the same knock-out round as the video above. Download the file and open it in a web browser (an internet connection is needed to load the three.js library). You can play, pause and scrub through the round, slow it down to ¼ speed, switch cameras, rotate the ring and turn on punch sounds.
+
+**This simulation was made with the help of Claude AI (Anthropic).** The 3D scene, the boxer models and the animation code were written with Claude's assistance; the data it replays comes from our own trained agent.
+
+What is real and what is added:
+
+- **Real, recorded from our final model:** where each boxer stands at every one of the 857 steps (read from the Atari console's memory), every punch that landed, the score and the action the network chose. [`replay_3d/extract_replay_data.py`](replay_3d/extract_replay_data.py) records this by playing the round greedily with `dqn_model.pth` (seed 1004) and saves it to `replay_3d/replay_data.json`:
+  ```bash
+  uv run python replay_3d/extract_replay_data.py
+  ```
+- **Added for the 3D view:** the human bodies, stance and footwork, punches that miss, impact effects and sound. The Atari game itself only stores positions and scores, so these are illustrations. The punches that land are timed to the exact step the game recorded them.
